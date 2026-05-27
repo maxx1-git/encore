@@ -107,6 +107,7 @@
 .dish__add {
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 13px; color: var(--ink);
+  cursor: pointer;
 }
 .dish__add:hover { color: var(--ember); }
 

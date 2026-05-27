@@ -1,339 +1,231 @@
-/* Encore — cart logic */
+/* =============================================================
+   Encore — Cart Page
+   Responsibilities: qty/remove/clear/checkout interactions via AJAX.
+   All cart state, prices, and HTML are rendered by Django.
+   This file only handles UI behavior after page load.
+   ============================================================= */
+
 (() => {
-  const STORAGE_KEY = "encore_cart_v1";
+  "use strict";
 
-  window.CATALOG = {
-    duck: {
-      name: "Roasted Duck Breast",
-      price: 38,
-      cat: "Main course",
-      img: "img/hero.jpg",
-    },
+  /* -----------------------------------------------------------
+     CONFIGURATION
+     Django templates should render data attributes on the
+     cart container to provide endpoint URLs:
 
-    chicken: {
-      name: "Herb Grilled Chicken",
-      price: 24,
-      cat: "Main course",
-      img: "img/dish-1.jpg",
-    },
+       <div data-cart-list
+            data-url-update="/cart/update/"
+            data-url-remove="/cart/remove/"
+            data-url-clear="/cart/clear/"
+            data-url-checkout="/checkout/">
+       </div>
 
-    salmon: {
-      name: "Citrus Atlantic Salmon",
-      price: 28,
-      cat: "Main course",
-      img: "img/dish-2.jpg",
-    },
+     Each action reloads the cart section from the server response
+     or does a full page reload — keeping Django as the source of truth.
+  ----------------------------------------------------------- */
 
-    beet: {
-      name: "Roasted Beet & Quinoa",
-      price: 18,
-      cat: "Bowls",
-      img: "img/dish-3.jpg",
-    },
-
-    beef: {
-      name: "Beef Tenderloin",
-      price: 42,
-      cat: "Main course",
-      img: "img/dish-4.jpg",
-    },
-
-    ravioli: {
-      name: "Sage Butter Ravioli",
-      price: 22,
-      cat: "Pasta",
-      img: "img/dish-5.jpg",
-    },
-
-    fondant: {
-      name: "Dark Chocolate Fondant",
-      price: 14,
-      cat: "Dessert",
-      img: "img/dish-6.jpg",
-    },
-  };
-
-  window.Cart = {
-    read() {
-      try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-      } catch {
-        return {};
-      }
-    },
-
-    write(state) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-
-      this.refreshBadge();
-
-      window.dispatchEvent(
-        new CustomEvent("cart:change")
-      );
-    },
-
-    add(id, qty = 1) {
-      const state = this.read();
-
-      state[id] = (state[id] || 0) + qty;
-
-      this.write(state);
-
-      const item = CATALOG[id];
-
-      toast(`Added · ${item ? item.name : "Item"}`);
-    },
-
-    setQty(id, qty) {
-      const state = this.read();
-
-      if (qty <= 0) {
-        delete state[id];
-      } else {
-        state[id] = qty;
-      }
-
-      this.write(state);
-    },
-
-    remove(id) {
-      const state = this.read();
-
-      delete state[id];
-
-      this.write(state);
-    },
-
-    clear() {
-      this.write({});
-    },
-
-    count() {
-      return Object.values(this.read()).reduce((a, b) => a + b, 0);
-    },
-
-    refreshBadge() {
-      document.querySelectorAll("[data-cart-count]").forEach((el) => {
-        el.textContent = this.count();
-      });
-    },
-  };
-
-  // --- Add to cart ---
-  function initAddButtons() {
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-add]");
-
-      if (!btn) return;
-
-      e.preventDefault();
-
-      Cart.add(btn.dataset.add);
-    });
+  /* -----------------------------------------------------------
+     CSRF helper
+     Reads the CSRF token from Django's cookie so AJAX POST/DELETE
+     requests pass the CSRF check.
+  ----------------------------------------------------------- */
+  function getCsrfToken() {
+    const name = "csrftoken";
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const [key, value] = cookie.trim().split("=");
+      if (key === name) return decodeURIComponent(value);
+    }
+    return "";
   }
 
-  // --- Cart page ---
+  /* -----------------------------------------------------------
+     AJAX helper
+     Thin wrapper around fetch for Django AJAX endpoints.
+     All cart endpoints should return:
+       { success: bool, message: string, cart_count: number, redirect?: string }
+     or a full HTML fragment if using Django's render_to_string.
+  ----------------------------------------------------------- */
+  async function djangoPost(url, body = {}) {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response.json();
+  }
+
+  /* -----------------------------------------------------------
+     CART ITEM INTERACTIONS
+     Handles: quantity increment/decrement, remove, clear, checkout.
+     All triggered via data attributes set by Django templates.
+
+     Expected data attributes:
+       [data-inc="<item-id>"]    — increase quantity
+       [data-dec="<item-id>"]    — decrease quantity
+       [data-rm="<item-id>"]     — remove item
+       [data-clear]              — clear entire cart
+       [data-checkout]           — proceed to checkout
+  ----------------------------------------------------------- */
   function initCartPage() {
     const list = document.querySelector("[data-cart-list]");
-
     if (!list) return;
 
-    const itemsRoot = list.querySelector("[data-cart-items]");
-    const emptyEl = list.querySelector("[data-cart-empty]");
-    const summary = document.querySelector("[data-cart-summary]");
+    /* Endpoint URLs from data attributes (set by Django template) */
+    const urls = {
+      update:   list.dataset.urlUpdate   || "",
+      remove:   list.dataset.urlRemove   || "",
+      clear:    list.dataset.urlClear    || "",
+      checkout: list.dataset.urlCheckout || "",
+    };
 
-    if (!itemsRoot) return;
+    /* ---- Quantity / Remove / Clear / Checkout ---- */
+    document.addEventListener("click", async (e) => {
 
-    const templateItem = itemsRoot.querySelector(".cart-item");
-
-    const templateHTML = templateItem
-      ? templateItem.outerHTML
-      : "";
-
-    function ensureItemNode(id) {
-      let node = itemsRoot.querySelector(
-        `[data-cart-item="${id}"]`
-      );
-
-      if (node || !templateHTML) return node;
-
-      const meta = CATALOG[id];
-
-      if (!meta) return null;
-
-      const wrap = document.createElement("div");
-
-      wrap.innerHTML = templateHTML.trim();
-
-      node = wrap.firstElementChild;
-
-      node.setAttribute("data-cart-item", id);
-
-      node.querySelector("h4").textContent = meta.name;
-
-      node.querySelector(".cart-item__meta").textContent =
-        `${meta.cat} · $${meta.price} each`;
-
-      const img = node.querySelector("img");
-
-      img.src = meta.img;
-      img.alt = meta.name;
-
-      node.querySelectorAll(
-        "[data-dec],[data-inc],[data-rm],[data-qty],[data-line-total]"
-      ).forEach((el) => {
-        if (el.hasAttribute("data-dec")) {
-          el.setAttribute("data-dec", id);
-        }
-
-        if (el.hasAttribute("data-inc")) {
-          el.setAttribute("data-inc", id);
-        }
-
-        if (el.hasAttribute("data-rm")) {
-          el.setAttribute("data-rm", id);
-        }
-
-        if (el.hasAttribute("data-qty")) {
-          el.setAttribute("data-qty", id);
-        }
-
-        if (el.hasAttribute("data-line-total")) {
-          el.setAttribute("data-line-total", id);
-        }
-      });
-
-      itemsRoot.appendChild(node);
-
-      return node;
-    }
-
-    function sync() {
-      const state = Cart.read();
-
-      const ids = Object.keys(state);
-
-      const isEmpty = ids.length === 0;
-
-      if (emptyEl) {
-        emptyEl.hidden = !isEmpty;
-      }
-
-      itemsRoot.hidden = isEmpty;
-
-      if (summary) {
-        summary.style.display = isEmpty ? "none" : "";
-      }
-
-      ids.forEach(ensureItemNode);
-
-      let subtotal = 0;
-
-      itemsRoot
-        .querySelectorAll("[data-cart-item]")
-        .forEach((node) => {
-          const id = node.dataset.cartItem;
-
-          const qty = state[id] || 0;
-
-          if (qty <= 0) {
-            node.remove();
-            return;
-          }
-
-          const price = CATALOG[id]?.price ?? 0;
-
-          const line = price * qty;
-
-          subtotal += line;
-
-          const qtyEl = node.querySelector(
-            `[data-qty="${id}"]`
-          );
-
-          const totalEl = node.querySelector(
-            `[data-line-total="${id}"]`
-          );
-
-          if (qtyEl) {
-            qtyEl.textContent = qty;
-          }
-
-          if (totalEl) {
-            totalEl.textContent = `$${line}`;
-          }
-        });
-
-      if (summary && !isEmpty) {
-        const delivery = subtotal >= 50 ? 0 : 6;
-
-        const total = subtotal + delivery;
-
-        const set = (selector, value) => {
-          const el = summary.querySelector(selector);
-
-          if (el) {
-            el.textContent = value;
-          }
-        };
-
-        set("[data-sum-subtotal]", `$${subtotal}`);
-
-        set(
-          "[data-sum-delivery]",
-          delivery === 0
-            ? "Complimentary"
-            : `$${delivery}`
-        );
-
-        set("[data-sum-total]", `$${total}`);
-      }
-    }
-
-    list.addEventListener("click", (e) => {
+      /* Increase quantity */
       const inc = e.target.closest("[data-inc]");
-      const dec = e.target.closest("[data-dec]");
-      const rm = e.target.closest("[data-rm]");
-
-      const state = Cart.read();
-
       if (inc) {
-        Cart.setQty(
-          inc.dataset.inc,
-          (state[inc.dataset.inc] || 0) + 1
-        );
+        await updateQty(inc.dataset.inc, 1, urls.update);
+        return;
       }
 
+      /* Decrease quantity */
+      const dec = e.target.closest("[data-dec]");
       if (dec) {
-        Cart.setQty(
-          dec.dataset.dec,
-          (state[dec.dataset.dec] || 0) - 1
-        );
+        await updateQty(dec.dataset.dec, -1, urls.update);
+        return;
       }
 
+      /* Remove item */
+      const rm = e.target.closest("[data-rm]");
       if (rm) {
-        Cart.remove(rm.dataset.rm);
+        await removeItem(rm.dataset.rm, urls.remove);
+        return;
       }
-    });
 
-    document.addEventListener("click", (e) => {
+      /* Clear cart */
       if (e.target.closest("[data-clear]")) {
-        Cart.clear();
+        await clearCart(urls.clear);
+        return;
       }
 
+      /* Checkout */
       if (e.target.closest("[data-checkout]")) {
-        toast("Checkout coming soon · order saved");
+        handleCheckout(urls.checkout);
+        return;
       }
     });
-
-    window.addEventListener("cart:change", sync);
-
-    sync();
   }
 
+  /* ---- Action handlers ---- */
+
+  async function updateQty(itemId, delta, url) {
+    if (!url) { reloadPage(); return; }
+
+    setCartLoading(true);
+    try {
+      const data = await djangoPost(url, { item_id: itemId, delta });
+
+      if (data.success) {
+        reloadPage();
+      } else {
+        window.notify(data.message || "Could not update quantity.", "error");
+        setCartLoading(false);
+      }
+    } catch (err) {
+      console.error("[Encore] Update qty failed:", err);
+      window.notify("Connection error. Please try again.", "error");
+      setCartLoading(false);
+    }
+  }
+
+  async function removeItem(itemId, url) {
+    if (!url) { reloadPage(); return; }
+
+    /* Optimistic UI: fade the item out while request is in flight */
+    const itemEl = document.querySelector(`[data-cart-item="${itemId}"]`);
+    if (itemEl) {
+      itemEl.style.transition = "opacity .25s, transform .25s";
+      itemEl.style.opacity = "0";
+      itemEl.style.transform = "translateX(8px)";
+    }
+
+    try {
+      const data = await djangoPost(url, { item_id: itemId });
+
+      if (data.success) {
+        window.notify(data.message || "Item removed.", "info");
+        reloadPage();
+      } else {
+        /* Restore item if request failed */
+        if (itemEl) { itemEl.style.opacity = ""; itemEl.style.transform = ""; }
+        window.notify(data.message || "Could not remove item.", "error");
+      }
+    } catch (err) {
+      if (itemEl) { itemEl.style.opacity = ""; itemEl.style.transform = ""; }
+      console.error("[Encore] Remove item failed:", err);
+      window.notify("Connection error. Please try again.", "error");
+    }
+  }
+
+  async function clearCart(url) {
+    if (!url) { reloadPage(); return; }
+
+    setCartLoading(true);
+    try {
+      const data = await djangoPost(url);
+
+      if (data.success) {
+        window.notify("Order cleared.", "info");
+        reloadPage();
+      } else {
+        window.notify(data.message || "Could not clear cart.", "error");
+        setCartLoading(false);
+      }
+    } catch (err) {
+      console.error("[Encore] Clear cart failed:", err);
+      window.notify("Connection error. Please try again.", "error");
+      setCartLoading(false);
+    }
+  }
+
+  function handleCheckout(url) {
+    if (url) {
+      window.location.href = url;
+    } else {
+      /* Placeholder until checkout is implemented */
+      window.notify("Checkout coming soon — your order is saved.", "info");
+    }
+  }
+
+  /* -----------------------------------------------------------
+     UTILITIES
+  ----------------------------------------------------------- */
+
+  /* Full page reload — simplest way to keep Django as source of truth */
+  function reloadPage() {
+    window.location.reload();
+  }
+
+  /* Visual loading overlay on the cart section */
+  function setCartLoading(active) {
+    const list = document.querySelector("[data-cart-list]");
+    if (!list) return;
+    list.style.opacity = active ? "0.5" : "";
+    list.style.pointerEvents = active ? "none" : "";
+    list.style.transition = "opacity .2s";
+  }
+
+  /* -----------------------------------------------------------
+     INIT
+  ----------------------------------------------------------- */
   document.addEventListener("DOMContentLoaded", () => {
-    Cart.refreshBadge();
-    initAddButtons();
     initCartPage();
   });
 })();
