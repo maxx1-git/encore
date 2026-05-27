@@ -47,7 +47,18 @@ INSTALLED_APPS = [
     'cloudinary',
     'cloudinary_storage',
     ]
+
+import cloudinary
+
+cloudinary.config(
+    cloud_name="dsx2k4v1e",
+    api_key="111278919975133",
+    api_secret="He8BRzShQw25qB-t-3QkoBk5ftg",
+    secure=True
+)
+
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 MIDDLEWARE = [
@@ -135,8 +146,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
-MEDIA_URL = '/media/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
