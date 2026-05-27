@@ -1,0 +1,26 @@
+# Virtual Environment
+venv/
+.env/
+
+# Django
+project/db.sqlite3
+db.sqlite3
+media/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code
+.vscode/
+
+# Old frontend (لو مش محتاجه)
+front-end design/
+front-end-template/
+lovabel-edited/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block cssstatic %}
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+{% endblock %}
+
+{% block title %}Encore — Modern fine dining, delivered{% endblock %}
+
+{% block content %}
+
+<main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <span class="eyebrow">Seasonal Menu · Autumn ’26</span>
+          <h1>Quiet luxury, <em>plated</em> with intention.</h1>
+          <p class="hero__lead">
+            Encore is a private kitchen of Michelin-trained chefs serving low-calorie,
+            ingredient-led meals — composed daily, delivered warm, eaten without compromise.
+          </p>
+          <div class="hero__cta">
+            <a class="btn btn--primary" href="{% url 'shop' %}">Explore the menu <span class="arrow">→</span></a>
+            <a class="btn btn--ghost" href="{% url 'home' %}#about">Our philosophy</a>
+          </div>
+          <div class="hero__meta">
+            <div><strong>14</strong><span>Signature dishes</span></div>
+            <div><strong>3★</strong><span>Michelin alumni</span></div>
+            <div><strong>45m</strong><span>Avg. delivery</span></div>
+          </div>
+        </div>
+        
+        {% for product in latest_dish %}
+                    
+        <div class="hero__visual">
+          <img src="{{product.dish_photo.url}}" alt="{{product.dish_name}}" />
+          <div class="hero__badge">
+            <div>
+              <small>Tonight’s plate</small>
+              <b>{{product.dish_name}} · ${{product.dish_price}}</b>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </section>
+
+    <!-- TRUST STRIP -->
+    <div class="strip">
+      <div class="container strip__row">
+        <span>Featured in</span>
+        <span>The Gourmand</span>
+        <span>Condé Nast Traveler</span>
+        <span>Eater · Editors’ Pick</span>
+        <span>Bon Appétit</span>
+        <span>Monocle</span>
+      </div>
+    </div>
+
+    <!-- DISHES -->
+    <section class="section dishes" id="menu">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">The Menu</span>
+            <h2 class="mt-s">Signature dishes,<br/>composed this week.</h2>
+          </div>
+          <p>A short list, written by hand each Monday. Sourced within 80 km whenever the season allows.</p>
+        </div>
+        <div class="dish-grid">
+          
+          {% for product in latest_dishes %}
+                      <article class="dish reveal">
+            <div class="dish__media"><img src="{{product.dish_photo.url}}" alt="{{product.dish_name}}" loading="lazy"></div>
+            <div class="dish__body">
+              <span class="dish__cat"> {{ product.get_dish_category_display }}</span>
+              <h3 class="dish__name">{{product.dish_name}}</h3>
+              <p class="dish__desc">{{product.dish_description}}</p>
+              <div class="dish__row">
+                <span class="dish__price">${{product.dish_price}}</span>
+                <button class="dish__add" data-add="duck" aria-label="Add {{product.dish_name}} to cart">
+                  Add to cart <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+            
+
+
+
+        </div>
+        <div class="center mt-l">
+          <a class="btn btn--ghost" href="{% url 'shop' %}">View full menu <span class="arrow">→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section class="section" id="about" style="background:var(--cream)">
+      <div class="container split">
+        <div class="split__media reveal">
+          <img src="{% static 'img/interior.jpg' %}" alt="Encore dining room" />
+        </div>
+        <div class="split__copy reveal">
+          <span class="eyebrow">Our philosophy</span>
+          <h2>Restraint is the<br/>highest seasoning.</h2>
+          <p>
+            We believe luxury is not excess — it is precision. Every plate is built around
+            three or four perfect components, sourced from growers we know by name, then
+            composed with the discipline of a tasting menu.
+          </p>
+          <div class="split__list">
+            <div><b>1</b><div><h4>Single-origin sourcing</h4><p>Direct relationships with farms, fisheries and cellars.</p></div></div>
+            <div><b>2</b><div><h4>Low-calorie by design</h4><p>Flavor density first; portions calibrated by our nutritionist.</p></div></div>
+            <div><b>3</b><div><h4>Composed, never assembled</h4><p>Hand-plated minutes before the courier arrives.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHEFS -->
+    <section class="section chefs" id="chefs">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">The Kitchen</span>
+            <h2 class="mt-s">Three chefs.<br/>One discipline.</h2>
+          </div>
+          <p>Trained in the kitchens of Le Bernardin, Noma and The Fat Duck — now cooking, every night, for you.</p>
+        </div>
+        <div class="chef-grid">
+          <figure class="chef reveal">
+            <img src="{% static 'img/chef-1.jpg' %}" alt="Chef Marco Lazzeri" />
+            <figcaption class="chef__caption"><span>Executive Chef</span><h4>Marco Lazzeri</h4></figcaption>
+          </figure>
+          <figure class="chef reveal">
+            <img src="{% static 'img/chef-2.jpg' %}" alt="Chef Aria Bennett" />
+            <figcaption class="chef__caption"><span>Head of Garde Manger</span><h4>Aria Bennett</h4></figcaption>
+          </figure>
+          <figure class="chef reveal">
+            <img src="{% static 'img/chef-3.jpg' %}" alt="Chef Theo Nakamura" />
+            <figcaption class="chef__caption"><span>Pastry Chef</span><h4>Theo Nakamura</h4></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section">
+      <div class="container">
+        <div class="cta reveal">
+          <div>
+            <span class="eyebrow on-dark">Members’ table</span>
+            <h2 class="mt-s">A standing reservation,<br/>three nights a week.</h2>
+            <p>Join the Encore table to receive priority access to seasonal tastings, chef collaborations and limited cellar pairings.</p>
+          </div>
+          <div class="cta__actions">
+            <a class="btn btn--ember" href="{% url 'shop' %}">Start an order <span class="arrow">→</span></a>
+            <a class="btn btn--ghost-dark" href="mailto:hello@encore.example">Become a member</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+{% endblock %}
+    {% block jsstatic %}
+        <script src="{% static 'js/index.js' %}" ></script>
+    {% endblock jsstatic %}

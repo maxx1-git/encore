@@ -1,0 +1,101 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+        {% block title %}Encore — Modern fine dining, delivered{% endblock %}
+    </title>
+    <meta name="description"
+        content="Encore brings low-calorie luxury meals crafted by world-renowned chefs — from 5-star kitchens to your table." />
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+    {% block cssstatic %}{% endblock %}
+</head>
+
+<body>
+    <header class="nav">
+        <div class="container nav__inner">
+            <a href="{% url 'home' %}" class="brand">Encore<small>est. 2026</small></a>
+            <nav class="nav__links" aria-label="Primary">
+                <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %} is-active {% endif %}">Home</a>
+                <a href="{% url 'shop' %}" class="{% if request.resolver_match.url_name == 'shop' %} is-active {% endif %}">Menu</a>
+                <a href="{% url 'home' %}#about">Story</a>
+                <a href="{% url 'home' %}#chefs">Chefs</a>
+            </nav>
+            <div style="display: flex; gap: 10px; align-items: center">
+                <a href="{% url 'cart' %}" class="nav__cart" aria-label="View cart">
+                    Cart <span class="nav__cart-icon" data-cart-count><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+</svg>
+</span>
+                </a>
+                <button class="nav__burger" aria-label="Open menu">
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    {% block content %}
+        
+    {% endblock content %}
+        
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__top">
+                <div>
+                    <h5>Encore</h5>
+                    <p style="max-width: 34ch; color: var(--muted-2)">
+                        Low-calorie luxury meals, composed by Michelin-trained chefs and
+                        delivered to your door.
+                    </p>
+                </div>
+                <div>
+                    <h6>Visit</h6>
+                    <ul>
+                        <li>27 Linden Mews</li>
+                        <li>Lisbon, Portugal</li>
+                        <li>Tue – Sun · 18:00 – 23:00</li>
+                    </ul>
+                </div>
+                <div>
+                    <h6>Menu</h6>
+                    <ul>
+                        <li><a href="{% url 'shop' %}">Main plates</a></li>
+                        <li><a href="{% url 'shop' %}">Pasta</a></li>
+                        <li><a href="{% url 'shop' %}">Bowls</a></li>
+                        <li><a href="{% url 'shop' %}">Desserts</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h6>Encore</h6>
+                    <ul>
+                        <li><a href="{% url 'home' %}#about">Philosophy</a></li>
+                        <li><a href="{% url 'home' %}#chefs">Chefs</a></li>
+                        <li><a href="{% url 'cart' %}">Your order</a></li>
+                        <li><a href="mailto:hello@encore.example">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <span>© 2026 Encore Kitchen. All rights reserved.</span>
+                <div class="footer__social" aria-label="Social">
+                    <a href="#" aria-label="Instagram">IG</a>
+                    <a href="#" aria-label="Twitter">TW</a>
+                    <a href="#" aria-label="Facebook">FB</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    
+    <script src="{% static 'js/base.js' %}"></script> 
+    {% block jsstatic %}
+        
+    {% endblock jsstatic %}
+        
+</body>
+
+</html>

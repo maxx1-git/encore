@@ -1,0 +1,99 @@
+{% extends "base.html" %} {% load static %} {% block cssstatic %}
+<link rel="stylesheet" href="{% static 'css/shop.css' %}" />
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+{% endblock %} {% block title %}Menu — Encore{% endblock %} {% block content %}
+<main>
+  <section class="page-head">
+    <div class="container">
+      <span class="eyebrow">Tonight’s menu</span>
+      <h1>Composed daily,<br />by hand.</h1>
+      <p>
+        The list below is rewritten each evening based on what arrived from our
+        growers this morning. Order before 21:00 for same-night delivery.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding-top: 24px; padding-bottom: 96px">
+    <div class="container">
+      <div class="filters" data-filters role="tablist" aria-label="Menu filters">
+        <button data-filter="all" class="is-active">All</button>
+        <button data-filter="main">Main plates</button>
+        <button data-filter="pasta">Pasta</button>
+        <button data-filter="bowl">Bowls</button>
+        <button data-filter="dessert">Desserts</button>
+      </div>
+      <div class="shop" data-shop>
+        
+        {% for slug, category in categories.items %}
+
+<section class="shop-section" data-cat="{{ slug }}">
+
+  <h3>
+    {{ category.title }}
+    <small>{{ category.items|length }} dishes</small>
+  </h3>
+
+  <div class="dish-grid">
+
+    {% for product in category.items %}
+
+    <article class="dish reveal">
+
+      <div class="dish__media">
+        <img
+          src="{{ product.dish_photo.url }}"
+          alt="{{ product.dish_name }}"
+          loading="lazy"
+        />
+      </div>
+
+      <div class="dish__body">
+
+        <span class="dish__cat">
+          {{ product.get_dish_category_display }}
+        </span>
+
+        <h3 class="dish__name">
+          {{ product.dish_name }}
+        </h3>
+
+        <p class="dish__desc">
+          {{ product.dish_description }}
+        </p>
+
+        <div class="dish__row">
+
+          <span class="dish__price">
+            ${{ product.dish_price }}
+          </span>
+
+<button
+    class="dish__add add-to-cart-btn"
+    data-url="{% url 'add-to-cart' product.id %}">
+    Add to cart
+    <span aria-hidden="true">→</span>
+</button>
+
+        </div>
+
+      </div>
+
+    </article>
+
+    {% endfor %}
+
+  </div>
+
+</section>
+
+{% endfor %}
+
+          
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %} {% block jsstatic %}
+<script src="{% static 'js/shop.js' %}"></script>
+{% endblock jsstatic %}

@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block cssstatic %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}">
+{% endblock cssstatic %}
+
+{% block title %}
+Your order — Encore
+{% endblock title %}
+
+{% block content %}
+
+<main>
+
+  <!-- PAGE HEADER -->
+  <section class="page-head">
+
+    <div class="container">
+
+      <span class="eyebrow">
+        Almost there
+      </span>
+
+      <h1>
+        Your table.
+      </h1>
+
+      <p>
+        Review your selections. Delivery windows refresh every
+        30 minutes — your courier will confirm when the kitchen
+        begins plating.
+      </p>
+
+    </div>
+
+  </section>
+
+  <!-- CART SECTION -->
+  <section style="padding-bottom: 96px;">
+
+    <div class="container cart-layout">
+
+      {% if cart_items %}
+
+      <!-- CART LIST -->
+      <div class="cart-list" data-cart-list>
+
+        <div class="cart-items" data-cart-items>
+
+          {% for item in cart_items %}
+
+          <article class="cart-item"
+                   data-cart-item="{{ item.product.dish_name }}">
+
+            <!-- IMAGE -->
+            <div class="cart-item__media">
+
+              <img
+                src="{{ item.product.dish_photo.url }}"
+                alt="{{ item.product.dish_name }}"
+              >
+
+            </div>
+
+            <!-- BODY -->
+            <div class="cart-item__body">
+
+              <h4>
+                {{ item.product.dish_name }}
+              </h4>
+
+              <div class="cart-item__meta">
+
+                {{ item.product.get_dish_category_display }}
+                ·
+                ${{ item.product.dish_price }} each
+
+              </div>
+
+              <!-- QUANTITY -->
+              <div class="cart-item__qty"
+                   role="group"
+                   aria-label="Quantity controls">
+
+                <a href="{% url 'decrease-quantity' item.product.id %}"
+                   aria-label="Decrease quantity">
+
+                  −
+
+                </a>
+
+                <span>
+                  {{ item.quantity }}
+                </span>
+
+                <a href="{% url 'increase-quantity' item.product.id %}"
+                   aria-label="Increase quantity">
+
+                  +
+
+                </a>
+
+              </div>
+
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div class="cart-item__right">
+
+              <span class="cart-item__price">
+
+                ${{ item.item_total }}
+
+              </span>
+
+              <a href="{% url 'remove-cart-item' item.product.id %}"
+                 class="cart-item__remove">
+
+                Remove
+
+              </a>
+
+            </div>
+
+          </article>
+
+          {% endfor %}
+
+        </div>
+
+      </div>
+
+      <!-- SUMMARY -->
+      <aside class="summary" data-cart-summary>
+
+        <h3>
+          Order summary
+        </h3>
+
+        <div class="summary__row">
+
+          <span>Subtotal</span>
+
+          <span>
+            $ {{ total }}
+          </span>
+
+        </div>
+
+        <div class="summary__row">
+
+          <span>Delivery</span>
+
+          <span>
+            Complimentary
+          </span>
+
+        </div>
+
+        <div class="summary__row muted">
+
+          <span>Taxes</span>
+
+          <span>
+            Calculated at checkout
+          </span>
+
+        </div>
+
+        <div class="summary__row total">
+
+          <span>Total</span>
+
+          <span>
+            $ {{ total }}
+          </span>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="summary__btns">
+
+          <button class="btn btn--primary btn--block"
+                  data-checkout>
+
+            Proceed to checkout
+
+            <span class="arrow">
+              →
+            </span>
+
+          </button>
+
+          <a href="{% url 'clear-cart' %}"
+             class="btn btn--ghost btn--block"
+             data-clear>
+
+            Clear order
+
+          </a>
+
+        </div>
+
+        <p class="summary__note">
+
+          Free delivery on orders over $50 within the city.
+
+        </p>
+
+      </aside>
+
+      {% else %}
+
+      <!-- EMPTY CART -->
+      <div class="cart-empty" data-cart-empty>
+
+        <div class="icon" aria-hidden="true">
+          🍽
+        </div>
+
+        <h3>
+          Your table is empty
+        </h3>
+
+        <p>
+          Browse our menu and add something extraordinary.
+        </p>
+
+        <a href="{% url 'shop' %}"
+           class="btn btn--primary">
+
+          Explore the menu
+
+          <span class="arrow">
+            →
+          </span>
+
+        </a>
+
+      </div>
+
+      {% endif %}
+
+    </div>
+
+    <!-- BACK BUTTON -->
+    <div class="container"
+         style="margin-top: 24px;">
+
+      <a href="{% url 'shop' %}"
+         style="
+          font-size: 13px;
+          color: var(--muted);
+          letter-spacing: .14em;
+          text-transform: uppercase;
+         ">
+
+        ← Back to menu
+
+      </a>
+
+    </div>
+
+  </section>
+
+</main>
+
+{% endblock content %}
+
+{% block jsstatic %}
+<script src="{% static 'js/cart.js' %}"></script>
+{% endblock jsstatic %}
