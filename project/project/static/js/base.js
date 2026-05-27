@@ -328,26 +328,7 @@
     els.forEach((el) => io.observe(el));
   }
 
-  /* -----------------------------------------------------------
-     CART BADGE — refresh from server-rendered data attribute
-     Django should render <span data-cart-count="{{ cart_count }}">
-     This reads it on load so the badge stays accurate on page
-     transitions without a fetch.
-  ----------------------------------------------------------- */
-  function initCartBadge() {
-    /* Badge elements may have an initial value set by Django via
-       the data attribute; respect it — no fetch needed on load. */
-    document.querySelectorAll("[data-cart-count]").forEach((el) => {
-      /* Value already in DOM from Django context, nothing to do.
-         Other modules can call window.updateCartBadge(n) to update. */
-    });
-  }
 
-  window.updateCartBadge = function (count) {
-    document.querySelectorAll("[data-cart-count]").forEach((el) => {
-      el.textContent = count;
-    });
-  };
 
   /* -----------------------------------------------------------
      INIT
@@ -356,6 +337,5 @@
     NotificationSystem.injectStyles();
     initNav();
     initReveal();
-    initCartBadge();
   });
 })();

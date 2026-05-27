@@ -133,10 +133,6 @@
       const data = await djangoPost(url, { item_id: itemId, delta });
 
       if (data.success) {
-        if (typeof data.cart_count === "number") {
-          window.updateCartBadge?.(data.cart_count);
-        }
-        /* Reload the cart section to reflect Django's updated state */
         reloadPage();
       } else {
         window.notify(data.message || "Could not update quantity.", "error");
@@ -165,9 +161,6 @@
 
       if (data.success) {
         window.notify(data.message || "Item removed.", "info");
-        if (typeof data.cart_count === "number") {
-          window.updateCartBadge?.(data.cart_count);
-        }
         reloadPage();
       } else {
         /* Restore item if request failed */
@@ -190,7 +183,6 @@
 
       if (data.success) {
         window.notify("Order cleared.", "info");
-        window.updateCartBadge?.(0);
         reloadPage();
       } else {
         window.notify(data.message || "Could not clear cart.", "error");
