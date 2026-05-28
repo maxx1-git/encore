@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import dj_database_url
 from pathlib import Path
 import os
 
@@ -44,27 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'pages',
     'products',
-    'cloudinary',
-    'cloudinary_storage',
+
     ]
 
-import cloudinary
 
-cloudinary.config(
-    cloud_name="dsx2k4v1e",
-    api_key="111278919975133",
-    api_secret="He8BRzShQw25qB-t-3QkoBk5ftg",
-    secure=True
-)
-
-STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
@@ -158,3 +140,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_URL = '/media/'

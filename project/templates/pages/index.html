@@ -34,7 +34,7 @@
         {% for product in latest_dish %}
                     
         <div class="hero__visual">
-          <img src="{{product.dish_photo.url}}" alt="{{product.dish_name}}" />
+          <img src="{{product.dish_photo}}" alt="{{product.dish_name}}" />
           <div class="hero__badge">
             <div>
               <small>Tonight’s plate</small>
@@ -73,7 +73,7 @@
           
           {% for product in latest_dishes %}
                       <article class="dish reveal">
-            <div class="dish__media"><img src="{{product.dish_photo.url}}" alt="{{product.dish_name}}" loading="lazy"></div>
+            <div class="dish__media"><img src="{{product.dish_photo}}" alt="{{product.dish_name}}" loading="lazy"></div>
             <div class="dish__body">
               <span class="dish__cat"> {{ product.get_dish_category_display }}</span>
               <h3 class="dish__name">{{product.dish_name}}</h3>
